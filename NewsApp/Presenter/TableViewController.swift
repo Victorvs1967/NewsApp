@@ -23,7 +23,8 @@ class TableViewController: UITableViewController {
   override func viewDidLoad() {
     super.viewDidLoad()
     
-    tableView.rowHeight = 90
+    tableView.estimatedRowHeight = 80
+    tableView.rowHeight = UITableView.automaticDimension
     
     NewsData.shared.loadNews {
       DispatchQueue.main.async {

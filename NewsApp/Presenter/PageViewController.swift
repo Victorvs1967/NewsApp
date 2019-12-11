@@ -12,6 +12,7 @@ class PageViewController: UIPageViewController, UIPageViewControllerDataSource {
   
   @IBAction func refreshButton(_ sender: Any) {
     
+    NewsData.isReload = true
     NewsData.shared.loadNews {
       self.showViewController()
     }

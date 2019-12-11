@@ -12,22 +12,7 @@ class NewsData {
   
   static let shared = NewsData()
   
-  var articles: [Article] {
-    
-    var array: [Article] = []
-    do {
-      let data = try Data(contentsOf: urlToData)
-      let rootDictionary = try JSONSerialization.jsonObject(with: data, options: .allowFragments) as! Dictionary<String, Any>
-      let articlesArray = (rootDictionary["articles"] as! [Dictionary<String, Any>])
-      
-      for dictionary in articlesArray {
-        array.append(Article(dictionary: dictionary))
-      }
-    } catch {
-      print(error.localizedDescription)
-    }
-    return array
-  }
+  static var isReload = false
   
   var urlToData: URL {
     let path = NSSearchPathForDirectoriesInDomains(.libraryDirectory, .userDomainMask, true)[0] + "/data.json"
@@ -35,17 +20,50 @@ class NewsData {
     return urlPath
   }
   
+  var articles: [Article] {
+    
+    var array: [Article] = []
+    
+    do {
+      
+      let path = urlToData
+      let data = try Data(contentsOf: path)
+      let rootDictionary = try JSONSerialization.jsonObject(with: data, options: .allowFragments) as! Dictionary<String, Any>
+      
+      if let articlesArray = rootDictionary["articles"] as? [Dictionary<String, Any>] {
+        for dictionary in articlesArray {
+          array.append(Article(dictionary: dictionary))
+        }
+      }
+    } catch {
+      print(error.localizedDescription)
+    }
+    return array
+  }
+  
   func loadNews(completionHandler: (() -> Void)?) {
     
-    let urlString = "\(apiUrl)\(apiRoute.topheadlines)?country=\(countries.Russia)&apiKey=\(apiKey)"
+    let urlString = "\(apiUrl)\(apiRoute.topheadlines.rawValue)?country=\(countries.Russia.rawValue)&apiKey=\(apiKey)"
     guard let url = URL(string: urlString) else { return }
     
     URLSession(configuration: .default).downloadTask(with: url) { urlFile, response, error in
       
-      if let dataUrl = urlFile {
-        try? FileManager.default.copyItem(at: dataUrl, to: self.urlToData)
+      do {
+        
+        let path = self.urlToData
+        
+        switch NewsData.isReload {
+        case true:
+          let newPath = try FileManager.default.replaceItemAt(path, withItemAt: urlFile!)
+          print(newPath!)
+        default:
+          try FileManager.default.copyItem(at: urlFile!, to: path)
+        }
+      } catch {
+        print("File already exist!")
       }
       
+      NewsData.isReload = false
       completionHandler?()
       
     }.resume()

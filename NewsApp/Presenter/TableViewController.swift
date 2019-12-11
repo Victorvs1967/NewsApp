@@ -12,6 +12,7 @@ class TableViewController: UITableViewController {
   
   @IBAction func refreshControlAction(_ sender: Any) {
     
+    NewsData.isReload = true
     NewsData.shared.loadNews {
       DispatchQueue.main.async {
         self.refreshControl?.endRefreshing()
@@ -23,7 +24,7 @@ class TableViewController: UITableViewController {
   override func viewDidLoad() {
     super.viewDidLoad()
     
-    tableView.estimatedRowHeight = 80
+    tableView.estimatedRowHeight = 90
     tableView.rowHeight = UITableView.automaticDimension
     
     NewsData.shared.loadNews {

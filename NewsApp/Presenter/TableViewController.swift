@@ -8,7 +8,10 @@
 
 import UIKit
 
-class TableViewController: UITableViewController {
+class TableViewController: UITableViewController, UISearchResultsUpdating, UISearchControllerDelegate {
+  
+  var dataSearchController: UISearchController!
+  var filteredArticles: [Article] = []
   
   @IBAction func refreshControlAction(_ sender: Any) {
     
@@ -27,10 +30,32 @@ class TableViewController: UITableViewController {
     tableView.estimatedRowHeight = 90
     tableView.rowHeight = UITableView.automaticDimension
     
+    dataSearchController = UISearchController(searchResultsController: nil)
+    dataSearchController.searchResultsUpdater = self
+    dataSearchController.obscuresBackgroundDuringPresentation = false
+    tableView.tableHeaderView = dataSearchController.searchBar
+    
     NewsData.shared.loadNews {
       DispatchQueue.main.async {
         self.tableView.reloadData()
       }
+    }
+  }
+  
+  //  MARK: - SearchController
+  func updateSearchResults(for searchController: UISearchController) {
+    
+    if let searchText = dataSearchController.searchBar.text {
+      filterContentForSearchText(searchText: searchText)
+      tableView.reloadData()
+    }
+    
+  }
+  
+  func filterContentForSearchText(searchText: String) {
+    
+    filteredArticles = NewsData.shared.articles.filter { (article) -> Bool in
+      return article.title.localizedCaseInsensitiveContains(searchText) || article.content.localizedCaseInsensitiveContains(searchText)
     }
   }
   
@@ -40,13 +65,14 @@ class TableViewController: UITableViewController {
   }
   
   override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-    return NewsData.shared.articles.count
+    
+    return dataSearchController.isActive ? filteredArticles.count : NewsData.shared.articles.count
   }
   
   override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
     
     let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath) as! TableViewCell
-    let article = NewsData.shared.articles[indexPath.row]
+    let article = dataSearchController.isActive ? filteredArticles[indexPath.row] : NewsData.shared.articles[indexPath.row]
     
     DispatchQueue.main.async {
       if let imageURL = URL(string: article.urlToImage) {
@@ -63,17 +89,13 @@ class TableViewController: UITableViewController {
     return cell
   }
   
-  
-  
   // MARK: - Navigation
-  
   override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
     
     if segue.identifier == "articleDetail" {
       if let vc = segue.destination as? ViewController, let articleIndex = tableView.indexPathForSelectedRow?.row  {
-        vc.article = NewsData.shared.articles[articleIndex]
+        vc.article = dataSearchController.isActive ? filteredArticles[articleIndex] : NewsData.shared.articles[articleIndex]
       }
     }
   }
-  
 }

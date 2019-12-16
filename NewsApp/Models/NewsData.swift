@@ -19,7 +19,7 @@ class NewsData {
     let urlPath = URL(fileURLWithPath: path)
     return urlPath
   }
-  
+    
   var articles: [Article] {
     
     var array: [Article] = []
@@ -43,7 +43,7 @@ class NewsData {
   
   func loadNews(completionHandler: (() -> Void)?) {
     
-    let urlString = "\(apiUrl)\(apiRoute.topheadlines.rawValue)?country=\(countries.Russia.rawValue)&apiKey=\(apiKey)"
+    let urlString = "\(apiUrl)\(apiRoute.topheadlines.rawValue)?country=\(countries.USA.rawValue)&apiKey=\(apiKey)"
     guard let url = URL(string: urlString) else { return }
     
     URLSession(configuration: .default).downloadTask(with: url) { urlFile, response, error in
